@@ -1,0 +1,65 @@
+<svg width="700" height="520" viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f2efe2"/>
+      <stop offset="100%" stop-color="#e6e6d2"/>
+    </linearGradient>
+    <linearGradient id="soilGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6f5236"/>
+      <stop offset="100%" stop-color="#503a26"/>
+    </linearGradient>
+    <linearGradient id="sproutGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6fa15c"/>
+      <stop offset="100%" stop-color="#3d6b3f"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="700" height="520" fill="url(#bgGrow)"/>
+
+  <!-- wooden seed tray -->
+  <rect x="60" y="300" width="580" height="150" rx="10" fill="#a9835f"/>
+  <rect x="60" y="300" width="580" height="18" rx="6" fill="#8a6a4c"/>
+
+  <!-- soil cells -->
+  <g>
+    <rect x="90" y="330" width="110" height="95" rx="8" fill="url(#soilGrad)"/>
+    <rect x="220" y="330" width="110" height="95" rx="8" fill="url(#soilGrad)"/>
+    <rect x="350" y="330" width="110" height="95" rx="8" fill="url(#soilGrad)"/>
+    <rect x="480" y="330" width="110" height="95" rx="8" fill="url(#soilGrad)"/>
+  </g>
+
+  <!-- seedlings -->
+  <g>
+    <g transform="translate(145,330)">
+      <path d="M0,0 C-4,-30 -22,-46 -40,-52" stroke="url(#sproutGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M0,0 C4,-40 20,-58 38,-64" stroke="url(#sproutGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-40" cy="-56" rx="20" ry="11" fill="#5a8a52" transform="rotate(-25 -40 -56)"/>
+      <ellipse cx="38" cy="-68" rx="22" ry="12" fill="#3f6b45" transform="rotate(20 38 -68)"/>
+    </g>
+    <g transform="translate(275,330)">
+      <path d="M0,0 C0,-46 0,-70 0,-86" stroke="url(#sproutGrad)" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-24" cy="-70" rx="22" ry="12" fill="#5a8a52" transform="rotate(-30 -24 -70)"/>
+      <ellipse cx="24" cy="-78" rx="24" ry="13" fill="#3f6b45" transform="rotate(28 24 -78)"/>
+    </g>
+    <g transform="translate(405,330)">
+      <path d="M0,0 C-6,-24 -18,-36 -34,-42" stroke="url(#sproutGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-34" cy="-44" rx="17" ry="10" fill="#5a8a52" transform="rotate(-20 -34 -44)"/>
+    </g>
+    <g transform="translate(535,330)">
+      <path d="M0,0 C2,-34 12,-54 30,-64" stroke="url(#sproutGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M0,0 C-6,-40 -18,-58 -32,-66" stroke="url(#sproutGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="30" cy="-66" rx="20" ry="11" fill="#3f6b45" transform="rotate(24 30 -66)"/>
+      <ellipse cx="-32" cy="-68" rx="19" ry="10" fill="#5a8a52" transform="rotate(-24 -32 -68)"/>
+    </g>
+  </g>
+
+  <!-- small trowel -->
+  <g transform="translate(560,150) rotate(20)">
+    <rect x="0" y="0" width="10" height="90" rx="5" fill="#7b5e43"/>
+    <path d="M-24,-40 C-24,-70 24,-70 24,-40 L14,0 L-14,0 Z" fill="#c9c2a8"/>
+  </g>
+
+  <!-- soft leaf accents -->
+  <ellipse cx="110" cy="90" rx="60" ry="26" fill="#b9c9ae" opacity="0.6" transform="rotate(-14 110 90)"/>
+  <ellipse cx="600" cy="440" rx="70" ry="30" fill="#b9c9ae" opacity="0.5" transform="rotate(10 600 440)"/>
+</svg>

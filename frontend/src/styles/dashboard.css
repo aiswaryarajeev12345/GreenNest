@@ -1,0 +1,61 @@
+.gn-dashboard {
+  padding: 2.75rem 0 4rem;
+}
+
+.gn-dashboard-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.gn-role-pill {
+  display: inline-block;
+  border: 1px solid var(--gn-moss);
+  color: var(--gn-moss-dark);
+  border-radius: 999px;
+  padding: 0.25em 0.9em;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.gn-dashboard-intro {
+  color: var(--gn-soil);
+  margin-bottom: 2rem;
+}
+
+.gn-placeholder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.gn-placeholder-card {
+  border: var(--gn-border);
+  border-radius: var(--gn-radius-lg);
+  padding: 1.4rem;
+  background: var(--gn-white);
+}
+
+.gn-placeholder-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.35em;
+}
+
+.gn-placeholder-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #3c473a;
+}
+
+.gn-placeholder-tag {
+  display: inline-block;
+  margin-top: 0.8rem;
+  font-size: 0.78rem;
+  color: var(--gn-soil);
+  border-top: var(--gn-border);
+  padding-top: 0.6rem;
+  width: 100%;
+}

@@ -1,0 +1,11 @@
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+class Migration(migrations.Migration):
+ initial=True
+ dependencies=[migrations.swappable_dependency(settings.AUTH_USER_MODEL)]
+ operations=[
+  migrations.CreateModel(name="ExpertClass",fields=[("id",models.BigAutoField(auto_created=True,primary_key=True,serialize=False,verbose_name="ID")),("title",models.CharField(max_length=180)),("description",models.TextField()),("image",models.ImageField(blank=True,null=True,upload_to="classes/")),("category",models.CharField(choices=[("Terrace Farming","Terrace Farming"),("Vegetable Gardening","Vegetable Gardening"),("Organic Gardening","Organic Gardening"),("Seed Starting","Seed Starting"),("Composting","Composting"),("Balcony Gardening","Balcony Gardening"),("Beginner Gardening","Beginner Gardening"),("Other","Other")],max_length=40)),("date",models.DateField()),("start_time",models.TimeField()),("duration",models.PositiveIntegerField(help_text="Duration in minutes")),("location",models.CharField(blank=True,max_length=200)),("mode",models.CharField(choices=[("ONLINE","Online"),("OFFLINE","Offline")],max_length=10)),("price",models.DecimalField(decimal_places=2,default=0,max_digits=10)),("max_seats",models.PositiveIntegerField(default=20)),("is_active",models.BooleanField(default=True)),("created_at",models.DateTimeField(auto_now_add=True)),("updated_at",models.DateTimeField(auto_now=True)),("expert",models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,related_name="expert_classes",to=settings.AUTH_USER_MODEL))]),
+  migrations.CreateModel(name="ClassEnrollment",fields=[("id",models.BigAutoField(auto_created=True,primary_key=True,serialize=False,verbose_name="ID")),("joined_at",models.DateTimeField(auto_now_add=True)),("status",models.CharField(choices=[("ACTIVE","Active"),("CANCELLED","Cancelled"),("COMPLETED","Completed")],default="ACTIVE",max_length=10)),("class_obj",models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,related_name="enrollments",to="classes.expertclass")),("user",models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,related_name="class_enrollments",to=settings.AUTH_USER_MODEL))]),
+  migrations.AddConstraint(model_name="classenrollment",constraint=models.UniqueConstraint(fields=("class_obj","user"),name="unique_class_enrollment"))
+ ]

@@ -1,0 +1,10 @@
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+class Migration(migrations.Migration):
+ initial=True
+ dependencies=[migrations.swappable_dependency(settings.AUTH_USER_MODEL)]
+ operations=[
+  migrations.CreateModel(name="ExchangeListing",fields=[("id",models.BigAutoField(auto_created=True,primary_key=True,serialize=False,verbose_name="ID")),("title",models.CharField(max_length=180)),("description",models.TextField()),("category",models.CharField(choices=[("Seeds","Seeds"),("Plants","Plants"),("Fertilizers","Fertilizers"),("Gardening Materials","Gardening Materials"),("Garden Tools","Garden Tools"),("Other","Other")],max_length=40)),("image",models.ImageField(blank=True,null=True,upload_to="exchange/")),("location",models.CharField(blank=True,max_length=150)),("status",models.CharField(choices=[("AVAILABLE","Available"),("PENDING","Pending"),("ACCEPTED","Accepted"),("COMPLETED","Completed"),("CANCELLED","Cancelled")],default="AVAILABLE",max_length=12)),("created_at",models.DateTimeField(auto_now_add=True)),("updated_at",models.DateTimeField(auto_now=True)),("owner",models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,related_name="exchange_listings",to=settings.AUTH_USER_MODEL))]),
+  migrations.CreateModel(name="ExchangeRequest",fields=[("id",models.BigAutoField(auto_created=True,primary_key=True,serialize=False,verbose_name="ID")),("message",models.TextField(blank=True)),("offered_item",models.CharField(max_length=180)),("status",models.CharField(choices=[("PENDING","Pending"),("ACCEPTED","Accepted"),("REJECTED","Rejected"),("CANCELLED","Cancelled"),("COMPLETED","Completed")],default="PENDING",max_length=10)),("created_at",models.DateTimeField(auto_now_add=True)),("updated_at",models.DateTimeField(auto_now=True)),("listing",models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,related_name="requests",to="exchange.exchangelisting")),("requester",models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,related_name="exchange_requests",to=settings.AUTH_USER_MODEL))])
+ ]

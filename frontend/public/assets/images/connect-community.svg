@@ -1,0 +1,67 @@
+<svg width="700" height="520" viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgConnect" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eef1e2"/>
+      <stop offset="100%" stop-color="#dce6cd"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="700" height="520" fill="url(#bgConnect)"/>
+
+  <!-- ground -->
+  <rect x="0" y="400" width="700" height="120" fill="#7fa06a"/>
+  <rect x="0" y="400" width="700" height="12" fill="#6c8d58"/>
+
+  <!-- raised garden bed -->
+  <rect x="90" y="330" width="520" height="70" rx="8" fill="#8a6a4c"/>
+  <rect x="90" y="330" width="520" height="12" fill="#a9835f"/>
+  <g>
+    <ellipse cx="150" cy="325" rx="26" ry="14" fill="#3f6b45"/>
+    <ellipse cx="230" cy="322" rx="30" ry="15" fill="#5a8a52"/>
+    <ellipse cx="330" cy="325" rx="28" ry="14" fill="#3f6b45"/>
+    <ellipse cx="420" cy="320" rx="32" ry="16" fill="#5a8a52"/>
+    <ellipse cx="520" cy="325" rx="26" ry="14" fill="#3f6b45"/>
+  </g>
+
+  <!-- person 1 (kneeling, planting) -->
+  <g transform="translate(200,300)">
+    <circle cx="0" cy="-70" r="22" fill="#c98a5e"/>
+    <path d="M-18,-56 C-18,-30 18,-30 18,-56 L14,-6 L-14,-6 Z" fill="#3f6b45"/>
+    <path d="M-14,-6 L-24,30" stroke="#2f4a33" stroke-width="14" stroke-linecap="round"/>
+    <path d="M14,-6 L26,26" stroke="#2f4a33" stroke-width="14" stroke-linecap="round"/>
+    <path d="M-16,-40 L-40,-10" stroke="#c98a5e" stroke-width="10" stroke-linecap="round"/>
+    <path d="M16,-40 L36,-14" stroke="#c98a5e" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <!-- person 2 (standing, holding basket) -->
+  <g transform="translate(400,260)">
+    <circle cx="0" cy="-110" r="24" fill="#8a5a3f"/>
+    <path d="M-20,-92 C-20,-50 20,-50 20,-92 L16,40 L-16,40 Z" fill="#d98e04"/>
+    <path d="M-16,40 L-20,110" stroke="#4a3826" stroke-width="15" stroke-linecap="round"/>
+    <path d="M16,40 L20,110" stroke="#4a3826" stroke-width="15" stroke-linecap="round"/>
+    <path d="M-18,-70 L-52,-30" stroke="#8a5a3f" stroke-width="11" stroke-linecap="round"/>
+    <path d="M18,-70 L48,-40" stroke="#8a5a3f" stroke-width="11" stroke-linecap="round"/>
+    <!-- basket -->
+    <g transform="translate(58,-20)">
+      <path d="M-22,20 C-22,36 22,36 22,20 L18,0 L-18,0 Z" fill="#a9835f"/>
+      <path d="M-16,-20 Q0,-40 16,-20" stroke="#8a6a4c" stroke-width="6" fill="none"/>
+      <circle cx="-6" cy="-6" r="9" fill="#c1432b"/>
+      <circle cx="8" cy="-8" r="8" fill="#d9822c"/>
+    </g>
+  </g>
+
+  <!-- person 3 (waving, background) -->
+  <g transform="translate(540,300)">
+    <circle cx="0" cy="-64" r="18" fill="#c98a5e"/>
+    <path d="M-14,-50 C-14,-26 14,-26 14,-50 L11,0 L-11,0 Z" fill="#5a8a52"/>
+    <path d="M-11,0 L-14,26" stroke="#2f4a33" stroke-width="10" stroke-linecap="round"/>
+    <path d="M11,0 L14,26" stroke="#2f4a33" stroke-width="10" stroke-linecap="round"/>
+    <path d="M11,-36 L34,-58" stroke="#c98a5e" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- string of bunting -->
+  <path d="M60,90 Q350,150 640,80" stroke="#8a6a4c" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M150,108 l14,20 l14,-20 Z" fill="#d98e04" opacity="0.85"/>
+  <path d="M330,132 l14,20 l14,-20 Z" fill="#5a8a52" opacity="0.85"/>
+  <path d="M480,118 l14,20 l14,-20 Z" fill="#c1432b" opacity="0.85"/>
+</svg>

@@ -1,0 +1,58 @@
+<svg width="700" height="520" viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgShare" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f6efd8"/>
+      <stop offset="100%" stop-color="#ecdfb8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="700" height="520" fill="url(#bgShare)"/>
+
+  <!-- table surface -->
+  <rect x="0" y="380" width="700" height="140" fill="#c9b184"/>
+  <rect x="0" y="380" width="700" height="10" fill="#b59d6c"/>
+
+  <!-- basket -->
+  <g transform="translate(350,300)">
+    <path d="M-190,90 C-190,140 190,140 190,90 L165,20 L-165,20 Z" fill="#a9835f"/>
+    <path d="M-165,20 L165,20" stroke="#8a6a4c" stroke-width="4"/>
+    <path d="M-190,90 Q0,60 190,90" stroke="#8a6a4c" stroke-width="3" fill="none" opacity="0.6"/>
+    <path d="M-180,60 Q0,32 180,60" stroke="#8a6a4c" stroke-width="3" fill="none" opacity="0.6"/>
+    <path d="M-150,-40 Q0,-90 150,-40" stroke="#8a6a4c" stroke-width="10" fill="none"/>
+  </g>
+
+  <!-- tomatoes -->
+  <g transform="translate(240,290)">
+    <circle r="34" fill="#c1432b"/>
+    <circle cx="-10" cy="-10" r="10" fill="#d9603f" opacity="0.7"/>
+    <path d="M-8,-32 Q0,-42 8,-32" stroke="#3f6b45" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(300,255)">
+    <circle r="26" fill="#cf5334"/>
+    <path d="M-6,-24 Q0,-32 6,-24" stroke="#3f6b45" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- eggplant -->
+  <g transform="translate(400,270)">
+    <path d="M0,-40 C40,-40 46,10 20,40 C0,60 -30,50 -34,20 C-38,-10 -30,-40 0,-40 Z" fill="#5b3a63"/>
+    <ellipse cx="-6" cy="-10" rx="10" ry="20" fill="#7a5484" opacity="0.6"/>
+    <path d="M-6,-40 Q0,-56 10,-42" stroke="#3f6b45" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- carrots bundle -->
+  <g transform="translate(470,300)">
+    <path d="M-10,0 L4,90 L14,0 Z" fill="#d9822c"/>
+    <path d="M6,0 L20,80 L28,0 Z" fill="#e8944a"/>
+    <path d="M-26,0 L-14,84 L-4,0 Z" fill="#e8944a"/>
+    <path d="M0,0 L-30,-30 M6,0 L6,-34 M12,0 L38,-28" stroke="#5a8a52" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- leafy greens -->
+  <g transform="translate(160,320)">
+    <path d="M0,20 C-30,10 -40,-20 -20,-40 C0,-25 10,0 0,20 Z" fill="#3f6b45"/>
+    <path d="M4,20 C34,8 46,-22 26,-44 C4,-28 -6,-2 4,20 Z" fill="#5a8a52"/>
+  </g>
+
+  <!-- soft ambient leaf -->
+  <ellipse cx="600" cy="120" rx="70" ry="30" fill="#b9c9ae" opacity="0.5" transform="rotate(-16 600 120)"/>
+</svg>
