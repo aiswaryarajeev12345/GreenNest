@@ -39,8 +39,6 @@ export default function Navbar() {
     <header className="site-nav">
       <div className="nav-inner">
 
-        {/* BRAND */}
-
         <Link
           className="brand"
           to="/"
@@ -49,7 +47,7 @@ export default function Navbar() {
           <span>🌿</span> GreenNest
         </Link>
 
-        {/* MOBILE MENU */}
+      
 
         <button
           className="menu-btn"
@@ -60,16 +58,10 @@ export default function Navbar() {
         </button>
 
         <nav
-          className={
-            open
-              ? "nav-links open"
-              : "nav-links"
-          }
+          className={open ? "nav-links open" : "nav-links"}
         >
 
-          {/* =========================
-              ADMIN NAVBAR
-          ========================= */}
+        
 
           {isAuthenticated && role === "ADMIN" ? (
             <>
@@ -103,9 +95,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              {/* =========================
-                  NORMAL USERS / EXPERT
-              ========================= */}
+            
 
               {isAuthenticated ? (
                 <>
@@ -151,14 +141,7 @@ export default function Navbar() {
                     Basket
                   </NavLink>
 
-                  <NavLink
-                    to="/dashboard"
-                    onClick={close}
-                  >
-                    Dashboard
-                  </NavLink>
-
-                  {/* SELLING IS A GROWER FUNCTION */}
+                
 
                   {(role === "GROWER" ||
                     role === "SELLER") && (
@@ -186,9 +169,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  {/* =========================
-                      GUEST
-                  ========================= */}
+               
 
                   <NavLink
                     to="/"

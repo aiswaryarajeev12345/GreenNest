@@ -23,14 +23,11 @@ export default function Classes() {
       setItems(data);
 
       /*
-       * We do not call /classes/my/ here because
-       * that endpoint is not currently available
-       * in the backend.
+       * Do NOT reset joined here.
        *
-       * Joined status will be handled when we add
-       * the Expert/Class management flow.
+       * The joined state is managed locally when
+       * the user joins or leaves a class.
        */
-      setJoined(new Set());
     } catch (error) {
       console.error("Classes loading error:", error);
 
@@ -55,10 +52,6 @@ export default function Classes() {
 
       setMsg("You're enrolled in this class!");
 
-      /*
-       * Add the class locally to the joined set
-       * so the button changes immediately.
-       */
       setJoined((previous) => {
         const updated = new Set(previous);
         updated.add(id);
@@ -178,103 +171,132 @@ export default function Classes() {
         /* CLASS LIST */
         <div className="class-grid">
 
-          {items.map((item) => (
-            <article
-              className="class-card"
-              key={item.id}
-            >
+          {items.map((item) => {
+            const isJoined = joined.has(item.id);
 
-              <img
-                src={classImage(item)}
-                alt={item.title}
-                onError={(event) => {
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src =
-                    DEFAULT_IMAGES.garden;
-                }}
-              />
+            const isFull =
+              Number(item.seats_taken || 0) >=
+              Number(item.max_seats || 0);
 
-              <div>
+            return (
+              <article
+                className="class-card"
+                key={item.id}
+              >
 
-                <small>
-                  {item.category}
-                  {" · "}
-                  {item.mode}
-                </small>
+                {/* CLASS IMAGE */}
+                <img
+                  src={classImage(item)}
+                  alt={item.title}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src =
+                      DEFAULT_IMAGES.garden;
+                  }}
+                />
 
-                <h3>
-                  {item.title}
-                </h3>
+                <div>
 
-                <p>
-                  {item.description}
-                </p>
+                  {/* CATEGORY + MODE */}
+                  <small>
+                    {item.category}
+                    {" · "}
+                    {item.mode}
+                  </small>
 
-                <p>
-                  <b>
-                    {item.date}
-                  </b>
-                  {" · "}
-                  {item.start_time}
-                  {" · "}
-                  {item.duration} min
-                </p>
+                  {/* TITLE */}
+                  <h3>
+                    {item.title}
+                  </h3>
 
-                <p>
-                  with{" "}
-                  {item.expert_name ||
-                    "GreenNest Expert"}
-                  {" · "}
-                  {item.seats_taken || 0}
-                  /
-                  {item.max_seats} seats
-                </p>
+                  {/* DESCRIPTION */}
+                  <p>
+                    {item.description}
+                  </p>
 
-                <div className="class-actions">
+                  {/* DATE + TIME */}
+                  <p>
+                    <b>
+                      {item.date}
+                    </b>
+                    {" · "}
+                    {item.start_time}
+                    {" · "}
+                    {item.duration} min
+                  </p>
 
-                  <strong>
-                    {Number(item.price)
-                      ? `₹${item.price}`
-                      : "Free"}
-                  </strong>
+                  {/* EXPERT + SEATS */}
+                  <p>
+                    with{" "}
+                    {item.expert_name ||
+                      "GreenNest Expert"}
+                    {" · "}
+                    {item.seats_taken || 0}
+                    /
+                    {item.max_seats} seats
+                  </p>
 
-                  {joined.has(item.id) ? (
+                  {/* CLASS ACTIONS */}
+                  <div className="class-actions">
 
-                    <button
-                      className="btn btn-green small class-action-btn"
-                      onClick={() =>
-                        leave(item.id)
-                      }
-                    >
-                      Joined · Leave
-                    </button>
+                    {/* PRICE */}
+                    <strong>
+                      {Number(item.price)
+                        ? `₹${item.price}`
+                        : "Free"}
+                    </strong>
 
-                  ) : (
+                    {/* JOIN / LEAVE */}
+                    {isJoined ? (
 
-                    <button
-                      className="btn btn-green small class-action-btn"
-                      onClick={() =>
-                        join(item.id)
-                      }
-                      disabled={
-                        Number(item.seats_taken || 0) >=
-                        Number(item.max_seats || 0)
-                      }
-                    >
-                      {Number(item.seats_taken || 0) >=
-                      Number(item.max_seats || 0)
-                        ? "Class full"
-                        : "Join class"}
-                    </button>
+                      <button
+                        className="btn btn-green small class-action-btn"
+                        onClick={() =>
+                          leave(item.id)
+                        }
+                      >
+                        ✓ Joined · Leave
+                      </button>
 
-                  )}
+                    ) : (
+
+                      <button
+                        className="btn btn-green small class-action-btn"
+                        onClick={() =>
+                          join(item.id)
+                        }
+                        disabled={isFull}
+                      >
+                        {isFull
+                          ? "Class full"
+                          : "Join class"}
+                      </button>
+
+                    )}
+
+                  </div>
+
+                  {/* GOOGLE MEET
+                      ONLY AFTER JOINING */}
+              {isJoined && (
+  <div className="class-meet-action">
+    <a
+      href="https://meet.google.com/edj-ixuf-ibm"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="class-meet-btn"
+    >
+      <span>🎥</span>
+      <span>Join Google Meet</span>
+    </a>
+  </div>
+)}
 
                 </div>
 
-              </div>
-
-            </article>
-          ))}
+              </article>
+            );
+          })}
 
         </div>
       )}

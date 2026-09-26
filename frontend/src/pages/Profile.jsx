@@ -1,494 +1,360 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  User,
+  MapPin,
+  Phone,
+  Award,
+  Upload,
+  Save,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
-import api from "../api/axios";
-import "../styles/profile.css";
 
-// Convert Django media URL into a URL React can display
-function getAvatarUrl(url) {
-  if (!url) return "";
+const Profile = () => {
+  const { user, updateProfile, refreshProfile } = useAuth();
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-
-  return `http://127.0.0.1:8000${url}`;
-}
-
-export default function Profile() {
-  const { user, refreshProfile } = useAuth();
-
-  const [form, setForm] = useState({
-    phone: "",
-    location: "",
-    gardening_experience: "",
-    bio: "",
+  const [formData, setFormData] = useState({
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    bio: user?.profile?.bio || "",
+    location_city: user?.profile?.location_city || "",
+    phone_number: user?.profile?.phone_number || "",
+    gardening_experience:
+      user?.profile?.gardening_experience || "BEGINNER",
   });
 
-  const [avatar, setAvatar] = useState(null);
-  const [preview, setPreview] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(
+    user?.profile?.avatar
+      ? `http://localhost:8000${user.profile.avatar}`
+      : null
+  );
 
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
-
-  // =====================================================
-  // LOAD PROFILE
-  // =====================================================
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.profile) {
-      setForm({
-        phone: user.profile.phone || "",
-        location: user.profile.location || "",
-        gardening_experience:
-          user.profile.gardening_experience || "",
-        bio: user.profile.bio || "",
-      });
+    if (!user) return;
 
-      setPreview(
-        getAvatarUrl(user.profile.avatar)
+    setFormData({
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
+      bio: user.profile?.bio || "",
+      location_city: user.profile?.location_city || "",
+      phone_number: user.profile?.phone_number || "",
+      gardening_experience:
+        user.profile?.gardening_experience || "BEGINNER",
+    });
+
+    if (user.profile?.avatar) {
+      setAvatarPreview(
+        user.profile.avatar.startsWith("http")
+          ? user.profile.avatar
+          : `http://localhost:8000${user.profile.avatar}`
       );
     }
   }, [user]);
 
-  // =====================================================
-  // HANDLE TEXT INPUT
-  // =====================================================
-
-  function handleChange(e) {
-    setForm({
-      ...form,
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
       [e.target.name]: e.target.value,
     });
+  };
 
-    setMessage("");
-    setError("");
-  }
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
 
-  // =====================================================
-  // HANDLE PROFILE IMAGE
-  // =====================================================
-
-  function handleAvatarChange(e) {
-    const file = e.target.files?.[0];
-
-    if (!file) {
-      return;
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
     }
+  };
 
-    // Make sure the selected file is an image
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file.");
-      return;
-    }
-
-    setAvatar(file);
-
-    // Show selected image immediately
-    const imageUrl = URL.createObjectURL(file);
-    setPreview(imageUrl);
-
-    setMessage("");
-    setError("");
-  }
-
-  // =====================================================
-  // SAVE PROFILE
-  // =====================================================
-
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setSaving(true);
-    setMessage("");
+    setSuccess("");
     setError("");
+    setLoading(true);
 
     try {
-      const data = new FormData();
+      let dataToSubmit;
 
-      data.append("phone", form.phone);
-      data.append("location", form.location);
-      data.append(
-        "gardening_experience",
-        form.gardening_experience
-      );
-      data.append("bio", form.bio);
+      if (avatarFile) {
+        dataToSubmit = new FormData();
 
-      if (avatar) {
-        data.append("avatar", avatar);
+        Object.keys(formData).forEach((key) => {
+          dataToSubmit.append(key, formData[key]);
+        });
+
+        dataToSubmit.append("avatar", avatarFile);
+      } else {
+        dataToSubmit = formData;
       }
 
-      await api.put(
-        "/auth/profile/",
-        data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      // Get updated profile from Django
+      await updateProfile(dataToSubmit);
       await refreshProfile();
 
-      setMessage(
-        "Profile updated successfully."
-      );
-
-      setAvatar(null);
+      setSuccess("Profile updated successfully!");
+      setAvatarFile(null);
     } catch (err) {
-      const responseData = err.response?.data;
-
-      if (
-        responseData &&
-        typeof responseData === "object"
-      ) {
-        const errors = Object.values(responseData)
-          .flat()
-          .join(" ");
-
-        setError(
-          errors || "Unable to update profile."
-        );
-      } else {
-        setError(
-          "Unable to update profile."
-        );
-      }
+      console.error("Update profile error:", err);
+      setError("Failed to update profile. Please try again.");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
-  }
-
-  // =====================================================
-  // USER INFORMATION
-  // =====================================================
-
-  const username =
-    user?.username || "User";
-
-  const email =
-    user?.email || "";
-
-  const role =
-    user?.profile?.role || "GROWER";
-
-  const roleName =
-    role.charAt(0) +
-    role.slice(1).toLowerCase();
-
-  const initial =
-    username.charAt(0).toUpperCase();
-
-  // =====================================================
-  // PAGE
-  // =====================================================
+  };
 
   return (
-    <div className="profile-page">
-
+    <main className="profile-page">
       <div className="profile-container">
 
-        {/* =================================================
-            PROFILE HEADER
-        ================================================= */}
+        {/* PAGE INTRO */}
+        <div className="profile-intro">
+          <p className="eyebrow">YOUR GREENNEST PROFILE</p>
 
-        <div className="profile-header">
+          <h1>
+            My Gardener <em>Profile</em>
+          </h1>
 
-          <div className="profile-avatar">
-
-            {preview ? (
-              <img
-                src={preview}
-                alt="Profile"
-                onError={(e) => {
-                  e.currentTarget.style.display =
-                    "none";
-                }}
-              />
-            ) : (
-              <span>{initial}</span>
-            )}
-
-          </div>
-
-          <div className="profile-title">
-
-            <h1>
-              Your Profile
-            </h1>
-
-            <p>
-              Manage your GreenNest account
-              and gardening information.
-            </p>
-
-          </div>
-
+          <p>
+            Manage your personal details, gardening experience,
+            location and profile picture.
+          </p>
         </div>
 
-        {/* =================================================
-            ACCOUNT INFORMATION
-        ================================================= */}
-
-        <div className="profile-card">
-
-          <h2>
-            Account Information
-          </h2>
-
-          <p className="profile-description">
-            Your GreenNest account details
-          </p>
-
-          <div className="account-grid">
-
-            {/* USERNAME */}
-
-            <div className="account-item">
-
-              <span>
-                Username
-              </span>
-
-              <strong>
-                {username}
-              </strong>
-
-            </div>
-
-            {/* EMAIL */}
-
-            <div className="account-item">
-
-              <span>
-                Email
-              </span>
-
-              <strong>
-                {email}
-              </strong>
-
-            </div>
-
-            {/* ROLE */}
-
-            <div className="account-item">
-
-              <span>
-                Role
-              </span>
-
-              <strong className="role-badge">
-                {roleName}
-              </strong>
-
-            </div>
-
+        {/* SUCCESS */}
+        {success && (
+          <div className="profile-message profile-success">
+            <CheckCircle size={18} />
+            <span>{success}</span>
           </div>
+        )}
 
-        </div>
+        {/* ERROR */}
+        {error && (
+          <div className="profile-message profile-error">
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
+        )}
 
-        {/* =================================================
-            PERSONAL INFORMATION
-        ================================================= */}
+        {/* PROFILE CARD */}
+        <section className="profile-shell">
 
-        <div className="profile-card">
+          {/* IDENTITY */}
+          <div className="profile-identity">
 
-          <h2>
-            Personal Information
-          </h2>
+            <div className="profile-avatar-wrap">
 
-          <p className="profile-description">
-            Tell the GreenNest community
-            a little about yourself.
-          </p>
+              <div className="profile-avatar">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Profile"
+                  />
+                ) : (
+                  <User size={46} />
+                )}
+              </div>
 
-          <form onSubmit={handleSubmit}>
-
-            <div className="form-grid">
-
-              {/* PHONE */}
-
-              <div className="form-group">
-
-                <label htmlFor="phone">
-                  Phone
-                </label>
+              <label
+                htmlFor="avatar-upload"
+                className="profile-avatar-edit"
+                title="Change profile picture"
+              >
+                <Upload size={15} />
 
                 <input
-                  id="phone"
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="Enter phone number"
-                />
-
-              </div>
-
-              {/* LOCATION */}
-
-              <div className="form-group">
-
-                <label htmlFor="location">
-                  Location
-                </label>
-
-                <input
-                  id="location"
-                  type="text"
-                  name="location"
-                  value={form.location}
-                  onChange={handleChange}
-                  placeholder="Enter your location"
-                />
-
-              </div>
-
-              {/* GARDENING EXPERIENCE */}
-
-              <div className="form-group full">
-
-                <label htmlFor="gardening_experience">
-                  Gardening Experience
-                </label>
-
-                <select
-                  id="gardening_experience"
-                  name="gardening_experience"
-                  value={
-                    form.gardening_experience
-                  }
-                  onChange={handleChange}
-                >
-
-                  <option value="">
-                    Select experience
-                  </option>
-
-                  <option value="BEGINNER">
-                    Beginner
-                  </option>
-
-                  <option value="INTERMEDIATE">
-                    Intermediate
-                  </option>
-
-                  <option value="EXPERIENCED">
-                    Experienced
-                  </option>
-
-                </select>
-
-              </div>
-
-              {/* BIO */}
-
-              <div className="form-group full">
-
-                <label htmlFor="bio">
-                  Bio
-                </label>
-
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={form.bio}
-                  onChange={handleChange}
-                  placeholder="Write something about yourself..."
-                  rows="5"
-                />
-
-              </div>
-
-              {/* PROFILE IMAGE */}
-
-              <div className="form-group full">
-
-                <label htmlFor="avatar">
-                  Profile Image
-                </label>
-
-                <input
-                  id="avatar"
+                  id="avatar-upload"
                   type="file"
                   accept="image/*"
-                  onChange={
-                    handleAvatarChange
-                  }
+                  onChange={handleAvatarChange}
                 />
+              </label>
 
-                {/* IMAGE PREVIEW */}
+            </div>
 
-                {preview && (
-                  <div className="profile-image-preview">
+            <div className="profile-user-info">
 
-                    <img
-                      src={preview}
-                      alt="Selected profile"
-                    />
+              <p className="profile-label">
+                GREENNEST MEMBER
+              </p>
 
-                    <div>
-                      <strong>
-                        Profile image preview
-                      </strong>
+              <h2>{user?.username}</h2>
 
-                      <span>
-                        Your selected image
-                      </span>
-                    </div>
+              <p className="profile-email">
+                {user?.email}
+              </p>
 
-                  </div>
-                )}
+              <div className="profile-badges">
+
+                <span className="profile-badge profile-role">
+                  {user?.profile?.role_display ||
+                    user?.profile?.role}
+                </span>
+
+                <span className="profile-badge profile-points">
+                  <Award size={14} />
+                  Points: {user?.profile?.reputation_points || 0}
+                </span>
 
               </div>
 
             </div>
+          </div>
 
-            {/* =================================================
-                SUCCESS MESSAGE
-            ================================================= */}
+          {/* FORM */}
+          <form
+            onSubmit={handleSubmit}
+            className="profile-form"
+          >
 
-            {message && (
-              <div className="profile-success">
-                {message}
+            <div className="profile-section-heading">
+              <p>PERSONAL DETAILS</p>
+              <h3>Tell us about yourself</h3>
+            </div>
+
+            <div className="profile-form-grid">
+
+              <div className="form-group">
+                <label className="form-label">
+                  First Name
+                </label>
+
+                <input
+                  type="text"
+                  name="first_name"
+                  className="form-input"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                />
               </div>
-            )}
 
-            {/* =================================================
-                ERROR MESSAGE
-            ================================================= */}
+              <div className="form-group">
+                <label className="form-label">
+                  Last Name
+                </label>
 
-            {error && (
-              <div className="profile-error">
-                {error}
+                <input
+                  type="text"
+                  name="last_name"
+                  className="form-input"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                />
               </div>
-            )}
 
-            {/* =================================================
-                SAVE BUTTON
-            ================================================= */}
+            </div>
 
-            <div className="profile-actions">
+            <div className="form-group">
+              <label className="form-label">
+                Gardener Bio / About Me
+              </label>
+
+              <textarea
+                name="bio"
+                rows="4"
+                className="form-textarea"
+                placeholder="Tell the GreenNest community about your garden..."
+                value={formData.bio}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="profile-form-grid">
+
+              <div className="form-group">
+                <label className="form-label">
+                  <MapPin size={15} />
+                  City / Location
+                </label>
+
+                <input
+                  type="text"
+                  name="location_city"
+                  className="form-input"
+                  placeholder="e.g. Bengaluru"
+                  value={formData.location_city}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <Phone size={15} />
+                  Phone Number
+                </label>
+
+                <input
+                  type="text"
+                  name="phone_number"
+                  className="form-input"
+                  placeholder="+91 98765 43210"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                />
+              </div>
+
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                Gardening Experience Level
+              </label>
+
+              <select
+                name="gardening_experience"
+                className="form-select"
+                value={formData.gardening_experience}
+                onChange={handleChange}
+              >
+                <option value="BEGINNER">
+                  Beginner (0–1 years)
+                </option>
+
+                <option value="INTERMEDIATE">
+                  Intermediate (1–3 years)
+                </option>
+
+                <option value="EXPERT">
+                  Expert / Veteran (3+ years)
+                </option>
+              </select>
+            </div>
+
+            <div className="profile-form-footer">
+
+              <p>
+                Your profile information helps other
+                GreenNest members connect with you.
+              </p>
 
               <button
                 type="submit"
-                disabled={saving}
+                className="btn profile-save-btn"
+                disabled={loading}
               >
-                {saving
-                  ? "Saving..."
-                  : "Save Changes"}
+                <Save size={17} />
+
+                {loading
+                  ? "Saving Changes..."
+                  : "Update Profile"}
               </button>
 
             </div>
 
           </form>
 
-        </div>
+        </section>
 
       </div>
-
-    </div>
+    </main>
   );
-}
+};
+
+export default Profile;

@@ -12,10 +12,29 @@ const STATUS_STEPS = [
   "DELIVERED",
 ];
 
-function formatMoney(value) {
-  const amount = Number(value ?? 0);
+const PAYMENT_METHODS = [
+  {
+    id: "UPI",
+    title: "UPI",
+    description: "Google Pay, PhonePe, Paytm",
+    icon: "📱",
+  },
+  {
+    id: "CARD",
+    title: "Card",
+    description: "Credit or debit card",
+    icon: "💳",
+  },
+  {
+    id: "NET_BANKING",
+    title: "Net Banking",
+    description: "Pay using your bank",
+    icon: "🏦",
+  },
+];
 
-  return amount.toFixed(2);
+function formatMoney(value) {
+  return Number(value ?? 0).toFixed(2);
 }
 
 function formatDate(value) {
@@ -38,15 +57,56 @@ function getStatusIndex(status) {
   return index === -1 ? 0 : index;
 }
 
+function createDemoTransactionId(orderId) {
+  const randomPart = Math.random()
+    .toString(36)
+    .substring(2, 10)
+    .toUpperCase();
+
+  return `GN-DEMO-${orderId}-${randomPart}`;
+}
+
 export default function OrderDetail() {
   const { id } = useParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [paymentLoading, setPaymentLoading] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [paymentError, setPaymentError] = useState("");
+  const [paymentLoading, setPaymentLoading] =
+    useState(false);
+
+  const [paymentSuccess, setPaymentSuccess] =
+    useState(false);
+
+  const [paymentError, setPaymentError] =
+    useState("");
+
+  const [showPaymentCheckout, setShowPaymentCheckout] =
+    useState(false);
+
+  const [paymentMethod, setPaymentMethod] =
+    useState("");
+
+  const [transactionId, setTransactionId] =
+    useState("");
+
+  // Demo payment fields
+  const [upiId, setUpiId] = useState("");
+
+  const [cardNumber, setCardNumber] =
+    useState("");
+
+  const [cardName, setCardName] =
+    useState("");
+
+  const [cardExpiry, setCardExpiry] =
+    useState("");
+
+  const [cardCvv, setCardCvv] =
+    useState("");
+
+  const [selectedBank, setSelectedBank] =
+    useState("");
 
   useEffect(() => {
     loadOrder();
@@ -60,15 +120,106 @@ export default function OrderDetail() {
 
       setOrder(response.data);
     } catch (error) {
-      console.error("Failed to load order:", error);
+      console.error(
+        "Failed to load order:",
+        error
+      );
+
       setOrder(null);
     } finally {
       setLoading(false);
     }
   }
 
+  function openPaymentCheckout() {
+    setPaymentError("");
+    setPaymentSuccess(false);
+    setPaymentMethod("");
+
+    setUpiId("");
+    setCardNumber("");
+    setCardName("");
+    setCardExpiry("");
+    setCardCvv("");
+    setSelectedBank("");
+
+    setShowPaymentCheckout(true);
+  }
+
+  function closePaymentCheckout() {
+    if (paymentLoading) {
+      return;
+    }
+
+    setShowPaymentCheckout(false);
+    setPaymentError("");
+  }
+
+  function validatePaymentDetails() {
+    if (!paymentMethod) {
+      return "Please choose a payment method.";
+    }
+
+    if (paymentMethod === "UPI") {
+      if (!upiId.trim()) {
+        return "Please enter a demo UPI ID.";
+      }
+
+      if (!upiId.includes("@")) {
+        return "Please enter a valid demo UPI ID.";
+      }
+    }
+
+    if (paymentMethod === "CARD") {
+      if (!cardNumber.trim()) {
+        return "Please enter a demo card number.";
+      }
+
+      if (
+        cardNumber.replace(/\s/g, "").length !==
+        16
+      ) {
+        return "Demo card number must contain 16 digits.";
+      }
+
+      if (!cardName.trim()) {
+        return "Please enter the cardholder name.";
+      }
+
+      if (!cardExpiry.trim()) {
+        return "Please enter the expiry date.";
+      }
+
+      if (!cardCvv.trim()) {
+        return "Please enter the demo CVV.";
+      }
+
+      if (cardCvv.length !== 3) {
+        return "Demo CVV must contain 3 digits.";
+      }
+    }
+
+    if (paymentMethod === "NET_BANKING") {
+      if (!selectedBank) {
+        return "Please select a bank.";
+      }
+    }
+
+    return "";
+  }
+
   async function handlePayment() {
-    if (!order) return;
+    if (!order || paymentLoading) {
+      return;
+    }
+
+    const validationError =
+      validatePaymentDetails();
+
+    if (validationError) {
+      setPaymentError(validationError);
+      return;
+    }
 
     try {
       setPaymentLoading(true);
@@ -76,17 +227,32 @@ export default function OrderDetail() {
       setPaymentSuccess(false);
 
       /*
-       * Step 1:
-       * Create demo payment.
+       * DEMO PAYMENT ONLY.
+       *
+       * These fields are NOT sent to Razorpay,
+       * Stripe, a bank, UPI provider, or any
+       * real payment service.
        */
-      await api.post("/orders/create-payment/", {
-        order_id: order.id,
-      });
+
+      await api.post(
+        "/orders/create-payment/",
+        {
+          order_id: order.id,
+        }
+      );
 
       /*
-       * Step 2:
-       * Verify demo payment.
+       * Simulate payment verification.
        */
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1500)
+      );
+
+      /*
+       * Demo verification.
+       */
+
       const response = await api.post(
         "/orders/verify-payment/",
         {
@@ -94,25 +260,29 @@ export default function OrderDetail() {
         }
       );
 
-      /*
-       * Backend returns the updated order.
-       */
       if (response.data?.order) {
         setOrder(response.data.order);
       } else {
         await loadOrder();
       }
 
+      const demoId =
+        createDemoTransactionId(order.id);
+
+      setTransactionId(demoId);
+
       setPaymentSuccess(true);
+      setShowPaymentCheckout(false);
     } catch (error) {
-      console.error("Payment failed:", error);
+      console.error(
+        "Demo payment failed:",
+        error
+      );
 
-      const message =
+      setPaymentError(
         error?.response?.data?.detail ||
-        error?.response?.data?.error ||
-        "Payment could not be completed.";
-
-      setPaymentError(message);
+          "Demo payment could not be completed."
+      );
     } finally {
       setPaymentLoading(false);
     }
@@ -153,12 +323,6 @@ export default function OrderDetail() {
     );
   }
 
-  /*
-   * -------------------------------------------------------
-   * ORDER DATA
-   * -------------------------------------------------------
-   */
-
   const orderStatus = String(
     order.status || "PENDING"
   ).toUpperCase();
@@ -166,19 +330,10 @@ export default function OrderDetail() {
   const currentStatusIndex =
     getStatusIndex(orderStatus);
 
-  /*
-   * Backend uses total_amount.
-   */
   const totalAmount = Number(
     order.total_amount ?? 0
   );
 
-  /*
-   * Calculate subtotal from order items when possible.
-   *
-   * This avoids showing ₹0.00 when the backend does not
-   * provide a separate subtotal field.
-   */
   const items = Array.isArray(order.items)
     ? order.items
     : [];
@@ -209,21 +364,6 @@ export default function OrderDetail() {
     order.subtotal !== null
       ? Number(order.subtotal)
       : calculatedSubtotal || totalAmount;
-
-  /*
-   * -------------------------------------------------------
-   * DELIVERY DATA
-   * Backend fields:
-   *
-   * delivery_name
-   * delivery_phone
-   * delivery_address
-   * delivery_city
-   * delivery_district
-   * delivery_state
-   * delivery_pincode
-   * -------------------------------------------------------
-   */
 
   const deliveryName =
     order.delivery_name || "N/A";
@@ -256,31 +396,21 @@ export default function OrderDetail() {
     .filter(Boolean)
     .join(", ");
 
-  /*
-   * -------------------------------------------------------
-   * PAYMENT
-   * -------------------------------------------------------
-   */
-
   const paymentStatus = String(
     order.payment_status || "PENDING"
   ).toUpperCase();
 
   const isPaid = paymentStatus === "PAID";
 
-  /*
-   * -------------------------------------------------------
-   * RENDER
-   * -------------------------------------------------------
-   */
+  const selectedMethod =
+    PAYMENT_METHODS.find(
+      (method) =>
+        method.id === paymentMethod
+    );
 
   return (
     <main className="order-detail-page">
       <div className="order-detail-container">
-
-        {/* =================================================
-            BACK BUTTON
-            ================================================= */}
 
         <Link
           to="/dashboard"
@@ -289,9 +419,7 @@ export default function OrderDetail() {
           ← Back to Dashboard
         </Link>
 
-        {/* =================================================
-            ORDER HEADER
-            ================================================= */}
+        {/* ORDER HEADER */}
 
         <div className="order-detail-header">
           <div>
@@ -318,29 +446,44 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* =================================================
-            PAYMENT SUCCESS
-            ================================================= */}
+        {/* SUCCESS */}
 
         {paymentSuccess && (
           <div className="payment-success-message">
-            ✓ Payment completed successfully.
+            <strong>
+              ✓ Payment completed successfully
+            </strong>
+
+            <p>
+              Your GreenNest demo payment has
+              been verified and your order is
+              confirmed.
+            </p>
+
+            {transactionId && (
+              <div className="demo-transaction">
+                <span>
+                  Demo Transaction ID
+                </span>
+
+                <strong>
+                  {transactionId}
+                </strong>
+              </div>
+            )}
           </div>
         )}
 
-        {/* =================================================
-            PAYMENT ERROR
-            ================================================= */}
+        {/* ERROR */}
 
-        {paymentError && (
-          <div className="payment-error-message">
-            {paymentError}
-          </div>
-        )}
+        {paymentError &&
+          !showPaymentCheckout && (
+            <div className="payment-error-message">
+              {paymentError}
+            </div>
+          )}
 
-        {/* =================================================
-            ORDER PROGRESS
-            ================================================= */}
+        {/* ORDER STATUS */}
 
         <section className="order-section-card">
           <div className="section-heading">
@@ -350,10 +493,8 @@ export default function OrderDetail() {
           </div>
 
           <div className="order-status-timeline">
-
             {STATUS_STEPS.map(
               (status, index) => {
-
                 const isCompleted =
                   index <= currentStatusIndex;
 
@@ -376,7 +517,6 @@ export default function OrderDetail() {
                         : ""
                     }`}
                   >
-
                     <div className="order-status-circle">
                       {isCompleted
                         ? "✓"
@@ -401,28 +541,18 @@ export default function OrderDetail() {
                 );
               }
             )}
-
           </div>
         </section>
 
-        {/* =================================================
-            MAIN CONTENT
-            ================================================= */}
-
         <div className="order-detail-grid">
 
-          {/* =================================================
-              LEFT SIDE
-              ================================================= */}
+          {/* LEFT */}
 
           <div className="order-detail-main">
 
-            {/* =================================================
-                ORDER ITEMS
-                ================================================= */}
+            {/* ITEMS */}
 
             <section className="order-section-card">
-
               <div className="section-heading">
                 <span>Your Purchase</span>
 
@@ -437,7 +567,6 @@ export default function OrderDetail() {
                   </p>
                 ) : (
                   items.map((item, index) => {
-
                     const quantity =
                       Number(
                         item.quantity ?? 0
@@ -468,11 +597,7 @@ export default function OrderDetail() {
                           `${item.product_name}-${index}`
                         }
                       >
-
-                        {/* Image */}
-
                         <div className="order-item-image">
-
                           {image ? (
                             <img
                               src={image}
@@ -484,13 +609,9 @@ export default function OrderDetail() {
                           ) : (
                             "🌱"
                           )}
-
                         </div>
 
-                        {/* Product */}
-
                         <div className="order-item-info">
-
                           <h3>
                             {item.product_name ||
                               item.product?.name ||
@@ -500,13 +621,9 @@ export default function OrderDetail() {
                           <p>
                             Quantity: {quantity}
                           </p>
-
                         </div>
 
-                        {/* Price */}
-
                         <div className="order-item-price">
-
                           <span>
                             ₹{formatMoney(price)}
                           </span>
@@ -517,24 +634,18 @@ export default function OrderDetail() {
                               itemSubtotal
                             )}
                           </strong>
-
                         </div>
-
                       </div>
                     );
                   })
                 )}
 
               </div>
-
             </section>
 
-            {/* =================================================
-                DELIVERY INFORMATION
-                ================================================= */}
+            {/* DELIVERY */}
 
             <section className="order-section-card">
-
               <div className="section-heading">
                 <span>Shipping</span>
 
@@ -572,14 +683,11 @@ export default function OrderDetail() {
                 </div>
 
               </div>
-
             </section>
 
           </div>
 
-          {/* =================================================
-              RIGHT SIDE - PAYMENT
-              ================================================= */}
+          {/* RIGHT PAYMENT */}
 
           <aside className="order-detail-sidebar">
 
@@ -595,28 +703,18 @@ export default function OrderDetail() {
 
               <div className="payment-summary">
 
-                {/* Subtotal */}
-
                 <div className="summary-row">
-                  <span>
-                    Subtotal
-                  </span>
+                  <span>Subtotal</span>
 
                   <strong>
                     ₹{formatMoney(subtotal)}
                   </strong>
                 </div>
 
-                {/* Divider */}
-
                 <div className="summary-divider" />
 
-                {/* Total */}
-
                 <div className="summary-total">
-                  <span>
-                    Total
-                  </span>
+                  <span>Total</span>
 
                   <strong>
                     ₹{formatMoney(totalAmount)}
@@ -625,10 +723,7 @@ export default function OrderDetail() {
 
               </div>
 
-              {/* Payment Status */}
-
               <div className="payment-status-row">
-
                 <span>
                   Payment Status
                 </span>
@@ -642,29 +737,409 @@ export default function OrderDetail() {
                 >
                   {paymentStatus}
                 </strong>
-
               </div>
 
-              {/* Pay Button */}
+              {/* PAY BUTTON */}
 
-              {!isPaid && (
-                <button
-                  type="button"
-                  className="btn btn-green payment-button"
-                  onClick={handlePayment}
-                  disabled={paymentLoading}
-                >
-                  {paymentLoading
-                    ? "Processing..."
-                    : "Pay Now"}
-                </button>
-              )}
+              {!isPaid &&
+                !showPaymentCheckout && (
+                  <>
+                    <div className="demo-payment-note">
+                      🔒 DEMO PAYMENT — No real
+                      money will be charged.
+                      <br />
+                      Do not enter real banking
+                      details.
+                    </div>
 
-              {/* Paid */}
+                    <button
+                      type="button"
+                      className="btn btn-green payment-button"
+                      onClick={
+                        openPaymentCheckout
+                      }
+                    >
+                      Continue to Payment →
+                    </button>
+                  </>
+                )}
+
+              {/* CHECKOUT */}
+
+              {!isPaid &&
+                showPaymentCheckout && (
+                  <div className="payment-checkout">
+
+                    <div className="payment-checkout-header">
+                      <div>
+                        <span>
+                          GreenNest Secure Checkout
+                        </span>
+
+                        <small>
+                          Demo payment
+                        </small>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="payment-close-btn"
+                        onClick={
+                          closePaymentCheckout
+                        }
+                        disabled={
+                          paymentLoading
+                        }
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <div className="demo-checkout-warning">
+                      <strong>
+                        DEMO MODE
+                      </strong>
+
+                      <span>
+                        This checkout does not
+                        process real money.
+                        Never enter real card,
+                        UPI, or banking details.
+                      </span>
+                    </div>
+
+                    <p className="payment-checkout-note">
+                      Choose how you want to
+                      simulate your payment.
+                    </p>
+
+                    {/* METHOD */}
+
+                    <div className="payment-method-list">
+
+                      {PAYMENT_METHODS.map(
+                        (method) => {
+                          const selected =
+                            paymentMethod ===
+                            method.id;
+
+                          return (
+                            <button
+                              type="button"
+                              key={method.id}
+                              className={`payment-method-option ${
+                                selected
+                                  ? "selected"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                setPaymentMethod(
+                                  method.id
+                                );
+
+                                setPaymentError(
+                                  ""
+                                );
+                              }}
+                              disabled={
+                                paymentLoading
+                              }
+                            >
+                              <span className="payment-method-icon">
+                                {method.icon}
+                              </span>
+
+                              <span className="payment-method-content">
+                                <strong>
+                                  {method.title}
+                                </strong>
+
+                                <small>
+                                  {method.description}
+                                </small>
+                              </span>
+
+                              <span className="payment-method-radio">
+                                {selected
+                                  ? "✓"
+                                  : ""}
+                              </span>
+                            </button>
+                          );
+                        }
+                      )}
+
+                    </div>
+
+                    {/* UPI */}
+
+                    {paymentMethod === "UPI" && (
+                      <div className="payment-input-section">
+
+                        <label>
+                          UPI ID
+                        </label>
+
+                        <input
+                          type="text"
+                          value={upiId}
+                          onChange={(e) =>
+                            setUpiId(
+                              e.target.value
+                            )
+                          }
+                          placeholder="example@upi"
+                          disabled={
+                            paymentLoading
+                          }
+                        />
+
+                        <small>
+                          Demo example:
+                          demo@upi
+                        </small>
+
+                      </div>
+                    )}
+
+                    {/* CARD */}
+
+                    {paymentMethod === "CARD" && (
+                      <div className="payment-input-section">
+
+                        <label>
+                          Card Number
+                        </label>
+
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength="19"
+                          value={cardNumber}
+                          onChange={(e) =>
+                            setCardNumber(
+                              e.target.value
+                                .replace(
+                                  /\D/g,
+                                  ""
+                                )
+                                .replace(
+                                  /(.{4})/g,
+                                  "$1 "
+                                )
+                                .trim()
+                            )
+                          }
+                          placeholder="1234 5678 9012 3456"
+                          disabled={
+                            paymentLoading
+                          }
+                        />
+
+                        <div className="payment-input-row">
+
+                          <div>
+                            <label>
+                              Name on Card
+                            </label>
+
+                            <input
+                              type="text"
+                              value={cardName}
+                              onChange={(e) =>
+                                setCardName(
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Demo User"
+                              disabled={
+                                paymentLoading
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label>
+                              Expiry
+                            </label>
+
+                            <input
+                              type="text"
+                              maxLength="5"
+                              value={cardExpiry}
+                              onChange={(e) =>
+                                setCardExpiry(
+                                  e.target.value
+                                )
+                              }
+                              placeholder="MM/YY"
+                              disabled={
+                                paymentLoading
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label>
+                              CVV
+                            </label>
+
+                            <input
+                              type="password"
+                              maxLength="3"
+                              value={cardCvv}
+                              onChange={(e) =>
+                                setCardCvv(
+                                  e.target.value
+                                    .replace(
+                                      /\D/g,
+                                      ""
+                                    )
+                                )
+                              }
+                              placeholder="123"
+                              disabled={
+                                paymentLoading
+                              }
+                            />
+                          </div>
+
+                        </div>
+
+                        <small>
+                          Use dummy details only.
+                        </small>
+
+                      </div>
+                    )}
+
+                    {/* NET BANKING */}
+
+                    {paymentMethod ===
+                      "NET_BANKING" && (
+                      <div className="payment-input-section">
+
+                        <label>
+                          Select Bank
+                        </label>
+
+                        <select
+                          value={selectedBank}
+                          onChange={(e) =>
+                            setSelectedBank(
+                              e.target.value
+                            )
+                          }
+                          disabled={
+                            paymentLoading
+                          }
+                        >
+                          <option value="">
+                            Choose a demo bank
+                          </option>
+
+                          <option value="HDFC">
+                            HDFC Bank
+                          </option>
+
+                          <option value="SBI">
+                            State Bank of India
+                          </option>
+
+                          <option value="ICICI">
+                            ICICI Bank
+                          </option>
+
+                          <option value="AXIS">
+                            Axis Bank
+                          </option>
+                        </select>
+
+                        <small>
+                          Bank selection is only
+                          simulated.
+                        </small>
+
+                      </div>
+                    )}
+
+                    {paymentError && (
+                      <div className="payment-checkout-error">
+                        {paymentError}
+                      </div>
+                    )}
+
+                    {/* VERIFICATION */}
+
+                    {paymentLoading && (
+                      <div className="payment-verifying">
+
+                        <div className="payment-spinner" />
+
+                        <strong>
+                          Verifying demo payment...
+                        </strong>
+
+                        <span>
+                          Please wait while GreenNest
+                          confirms your payment.
+                        </span>
+
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      className="btn btn-green payment-confirm-button"
+                      onClick={handlePayment}
+                      disabled={paymentLoading}
+                    >
+                      {paymentLoading
+                        ? "Verifying..."
+                        : `Pay ₹${formatMoney(
+                            totalAmount
+                          )}`}
+                    </button>
+
+                    {selectedMethod && (
+                      <div className="selected-payment-method">
+                        Selected:{" "}
+                        <strong>
+                          {selectedMethod.title}
+                        </strong>
+                      </div>
+                    )}
+
+                    <small className="payment-demo-label">
+                      DEMO MODE · ₹0 real money
+                    </small>
+
+                  </div>
+                )}
+
+              {/* PAID */}
 
               {isPaid && (
                 <div className="paid-message">
-                  ✓ Payment completed
+                  <strong>
+                    ✓ Payment completed
+                  </strong>
+
+                  <span>
+                    Your order has been confirmed.
+                  </span>
+
+                  {transactionId && (
+                    <div className="paid-transaction">
+                      <small>
+                        Demo Transaction ID
+                      </small>
+
+                      <strong>
+                        {transactionId}
+                      </strong>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -673,7 +1148,6 @@ export default function OrderDetail() {
           </aside>
 
         </div>
-
       </div>
     </main>
   );

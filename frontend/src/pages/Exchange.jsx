@@ -30,6 +30,7 @@ export default function Exchange() {
   const [showOwnerRequests, setShowOwnerRequests] = useState(false);
 
   const [requestItem, setRequestItem] = useState(null);
+  const [statusItem, setStatusItem] = useState(null);
 
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -122,6 +123,7 @@ export default function Exchange() {
       await upload("/exchange/", data);
 
       setMessage("Your exchange listing has been published.");
+
       setForm(EMPTY_FORM);
       setShowCreate(false);
 
@@ -143,18 +145,26 @@ export default function Exchange() {
   function openRequest(item) {
     resetMessages();
 
-    setRequestItem(item);
+    if (item.status === "AVAILABLE") {
+      setRequestItem(item);
 
-    setRequestForm({
-      offered_item: "",
-      message: "",
-      image: null,
-    });
+      setRequestForm({
+        offered_item: "",
+        message: "",
+        image: null,
+      });
+
+      return;
+    }
+
+    setStatusItem(item);
   }
 
   async function sendRequest() {
     if (!requestForm.offered_item.trim()) {
-      setError("Please enter what you are offering in exchange.");
+      setError(
+        "Please enter what you are offering in exchange."
+      );
       return;
     }
 
@@ -264,7 +274,10 @@ export default function Exchange() {
       return getImage(item.image);
     }
 
-    return DEFAULT_IMAGES.seedlings;
+    return (
+      DEFAULT_IMAGES.seedlings ||
+      DEFAULT_IMAGES.garden
+    );
   }
 
   function statusLabel(status) {
@@ -273,8 +286,8 @@ export default function Exchange() {
       PENDING: "Request pending",
       ACCEPTED: "Exchange accepted",
       COMPLETED: "Completed",
-      CANCELLED: "Cancelled",
-      REJECTED: "Rejected",
+      CANCELLED: "Exchange cancelled",
+      REJECTED: "Request rejected",
     };
 
     return labels[status] || status;
@@ -334,12 +347,7 @@ export default function Exchange() {
         }}
       >
         <button
-          className="btn"
-          style={{
-            background: "white",
-            color: "var(--forest)",
-            boxShadow: "var(--shadow)",
-          }}
+          className="btn exchange-action-btn"
           onClick={() => {
             resetMessages();
             setShowMyRequests(true);
@@ -350,12 +358,7 @@ export default function Exchange() {
         </button>
 
         <button
-          className="btn"
-          style={{
-            background: "white",
-            color: "var(--forest)",
-            boxShadow: "var(--shadow)",
-          }}
+          className="btn exchange-action-btn"
           onClick={() => {
             resetMessages();
             setShowOwnerRequests(true);
@@ -411,58 +414,65 @@ export default function Exchange() {
           </button>
         </div>
       ) : (
-        <div className="exchange-grid">
+        <div className="class-grid">
           {items.map((item) => (
             <article
-              className="exchange-card"
+              className="class-card"
               key={item.id}
+              onClick={() => openRequest(item)}
+              style={{ cursor: "pointer" }}
             >
               <img
                 src={listingImage(item)}
                 alt={item.title}
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src =
+                    DEFAULT_IMAGES.garden;
+                }}
               />
 
-              <small>
-                {item.category}
-              </small>
+              <div>
+                <small>
+                  {item.category}
+                  {" · "}
+                  EXCHANGE
+                </small>
 
-              <h3>
-                {item.title}
-              </h3>
+                <h3>
+                  {item.title}
+                </h3>
 
-              <p>
-                {item.description}
-              </p>
+                <p>
+                  {item.description}
+                </p>
 
-              <span>
-                📍{" "}
-                {item.location ||
-                  "Local grower"}
-              </span>
+                <p>
+                  📍{" "}
+                  {item.location || "Local grower"}
+                </p>
 
-              <span>
-                👤{" "}
-                {item.owner_name ||
-                  "GreenNest grower"}
-              </span>
+                <p>
+                  with{" "}
+                  {item.owner_name ||
+                    "GreenNest grower"}
+                </p>
 
-              <span>
-                {statusLabel(item.status)}
-              </span>
-
-              <button
-                className="btn btn-green small"
-                onClick={() =>
-                  openRequest(item)
-                }
-                disabled={
-                  item.status !== "AVAILABLE"
-                }
-              >
-                {item.status === "AVAILABLE"
-                  ? "Request exchange"
-                  : statusLabel(item.status)}
-              </button>
+                {/* NEW EXCHANGE-SPECIFIC AREA */}
+            {/* STATUS IS NOW THE BUTTON — opens details/request modal */}
+<div className="exchange-status-actions">
+  <button
+    type="button"
+    className="exchange-request-btn"
+    onClick={(event) => {
+      event.stopPropagation();
+      openRequest(item);
+    }}
+  >
+    {statusLabel(item.status)}
+  </button>
+</div>
+              </div>
             </article>
           ))}
         </div>
@@ -487,8 +497,7 @@ export default function Exchange() {
           <div
             className="modal-card"
             style={{
-              maxHeight:
-                "calc(100vh - 48px)",
+              maxHeight: "calc(100vh - 48px)",
               overflowY: "auto",
               width: "min(560px, 100%)",
               boxSizing: "border-box",
@@ -497,9 +506,7 @@ export default function Exchange() {
           >
             <button
               className="close"
-              onClick={() =>
-                setShowCreate(false)
-              }
+              onClick={() => setShowCreate(false)}
             >
               ×
             </button>
@@ -541,16 +548,14 @@ export default function Exchange() {
                   value={form.category}
                   onChange={handleFormChange}
                 >
-                  {CATEGORIES.map(
-                    (category) => (
-                      <option
-                        key={category}
-                        value={category}
-                      >
-                        {category}
-                      </option>
-                    )
-                  )}
+                  {CATEGORIES.map((category) => (
+                    <option
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -622,8 +627,7 @@ export default function Exchange() {
           <div
             className="modal-card"
             style={{
-              maxHeight:
-                "calc(100vh - 48px)",
+              maxHeight: "calc(100vh - 48px)",
               overflowY: "auto",
               width: "min(560px, 100%)",
               boxSizing: "border-box",
@@ -632,9 +636,7 @@ export default function Exchange() {
           >
             <button
               className="close"
-              onClick={() =>
-                setRequestItem(null)
-              }
+              onClick={() => setRequestItem(null)}
             >
               ×
             </button>
@@ -648,17 +650,15 @@ export default function Exchange() {
             </h2>
 
             <p>
-              Tell the grower what you would
-              like to offer in exchange.
+              Tell the grower what you would like
+              to offer in exchange.
             </p>
 
             <label>
               What are you offering?
 
               <input
-                value={
-                  requestForm.offered_item
-                }
+                value={requestForm.offered_item}
                 onChange={(event) =>
                   setRequestForm({
                     ...requestForm,
@@ -666,7 +666,7 @@ export default function Exchange() {
                       event.target.value,
                   })
                 }
-                placeholder="Example: Mango Plant"
+                placeholder="Example: Tomato seeds"
               />
             </label>
 
@@ -674,14 +674,11 @@ export default function Exchange() {
               Message
 
               <textarea
-                value={
-                  requestForm.message
-                }
+                value={requestForm.message}
                 onChange={(event) =>
                   setRequestForm({
                     ...requestForm,
-                    message:
-                      event.target.value,
+                    message: event.target.value,
                   })
                 }
                 placeholder="Write a message to the grower..."
@@ -689,7 +686,6 @@ export default function Exchange() {
               />
             </label>
 
-            {/* NEW IMAGE FIELD */}
             <label>
               Photo of what you are offering
 
@@ -707,7 +703,6 @@ export default function Exchange() {
               />
             </label>
 
-            {/* IMAGE PREVIEW */}
             {requestForm.image && (
               <div
                 style={{
@@ -728,7 +723,7 @@ export default function Exchange() {
                   src={URL.createObjectURL(
                     requestForm.image
                   )}
-                  alt="Mango Plant preview"
+                  alt="Selected exchange item"
                   style={{
                     width: "160px",
                     height: "130px",
@@ -748,6 +743,182 @@ export default function Exchange() {
                 ? "Sending..."
                 : "Send exchange request"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* STATUS MODAL */}
+      {statusItem && (
+        <div
+          className="modal"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            overflowY: "auto",
+            padding: "24px",
+            boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="modal-card"
+            style={{
+              maxHeight: "calc(100vh - 48px)",
+              overflowY: "auto",
+              width: "min(560px, 100%)",
+              boxSizing: "border-box",
+              margin: "auto",
+            }}
+          >
+            <button
+              className="close"
+              onClick={() => setStatusItem(null)}
+            >
+              ×
+            </button>
+
+            <p className="eyebrow">
+              COMMUNITY EXCHANGE
+            </p>
+
+            <h2>
+              {statusItem.title}
+            </h2>
+
+            {statusItem.image && (
+              <img
+                src={listingImage(statusItem)}
+                alt={statusItem.title}
+                style={{
+                  width: "100%",
+                  maxHeight: "280px",
+                  objectFit: "cover",
+                  borderRadius: "16px",
+                  marginBottom: "20px",
+                }}
+              />
+            )}
+
+            <p>
+              {statusItem.description}
+            </p>
+
+            <p>
+              📍{" "}
+              {statusItem.location ||
+                "Local grower"}
+            </p>
+
+            <p>
+              with{" "}
+              {statusItem.owner_name ||
+                "GreenNest grower"}
+            </p>
+
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "18px",
+                borderRadius: "14px",
+                background: "var(--surface)",
+              }}
+            >
+              {statusItem.status === "PENDING" && (
+                <>
+                  <h3>
+                    Exchange request pending
+                  </h3>
+
+                  <p>
+                    Your exchange request has
+                    already been sent to the grower.
+                  </p>
+
+                  <p>
+                    Please wait for the grower
+                    to respond.
+                  </p>
+                </>
+              )}
+
+              {statusItem.status === "COMPLETED" && (
+                <>
+                  <h3>
+                    Exchange completed
+                  </h3>
+
+                  <p>
+                    This exchange has already
+                    been completed and is no
+                    longer available.
+                  </p>
+                </>
+              )}
+
+              {statusItem.status === "ACCEPTED" && (
+                <>
+                  <h3>
+                    Exchange accepted
+                  </h3>
+
+                  <p>
+                    Your exchange request has
+                    been accepted by the grower.
+                  </p>
+                </>
+              )}
+
+              {statusItem.status === "REJECTED" && (
+                <>
+                  <h3>
+                    Request rejected
+                  </h3>
+
+                  <p>
+                    This exchange request was
+                    not accepted by the grower.
+                  </p>
+                </>
+              )}
+
+              {statusItem.status === "CANCELLED" && (
+                <>
+                  <h3>
+                    Exchange request cancelled
+                  </h3>
+
+                  <p>
+                    This exchange request has
+                    been cancelled.
+                  </p>
+                </>
+              )}
+
+              {![
+                "PENDING",
+                "COMPLETED",
+                "ACCEPTED",
+                "REJECTED",
+                "CANCELLED",
+              ].includes(statusItem.status) && (
+                <>
+                  <h3>
+                    {statusLabel(
+                      statusItem.status
+                    )}
+                  </h3>
+
+                  <p>
+                    This exchange listing is
+                    currently not available for
+                    a new request.
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -772,8 +943,7 @@ export default function Exchange() {
             className="modal-card"
             style={{
               maxWidth: "720px",
-              maxHeight:
-                "calc(100vh - 48px)",
+              maxHeight: "calc(100vh - 48px)",
               overflowY: "auto",
               width: "100%",
               boxSizing: "border-box",
@@ -782,9 +952,7 @@ export default function Exchange() {
           >
             <button
               className="close"
-              onClick={() =>
-                setShowMyRequests(false)
-              }
+              onClick={() => setShowMyRequests(false)}
             >
               ×
             </button>
@@ -809,107 +977,97 @@ export default function Exchange() {
                   gap: "12px",
                 }}
               >
-                {myRequests.map(
-                  (request) => (
-                    <div
-                      key={request.id}
+                {myRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    style={{
+                      background: "white",
+                      padding: "18px",
+                      borderRadius: "16px",
+                    }}
+                  >
+                    <small>
+                      {request.listing?.title ||
+                        `Listing #${request.listing}`}
+                    </small>
+
+                    <h3
                       style={{
-                        background: "white",
-                        padding: "18px",
-                        borderRadius: "16px",
+                        margin: "7px 0",
                       }}
                     >
-                      <small>
-                        {request.listing?.title ||
-                          `Listing #${request.listing}`}
-                      </small>
+                      Offering:{" "}
+                      {request.offered_item}
+                    </h3>
 
-                      <h3
-                        style={{
-                          margin: "7px 0",
-                        }}
-                      >
-                        Offering:{" "}
-                        {request.offered_item}
-                      </h3>
+                    {request.message && (
+                      <p>
+                        {request.message}
+                      </p>
+                    )}
 
-                      {request.message && (
-                        <p>
-                          {request.message}
-                        </p>
-                      )}
-
-                      {/* OFFERED ITEM IMAGE */}
-                      {request.image && (
-                        <div
-                          style={{
-                            marginTop: "12px",
-                          }}
-                        >
-                          <p
-                            style={{
-                              fontWeight: 600,
-                              marginBottom: "8px",
-                            }}
-                          >
-                            Your offered item
-                          </p>
-
-                          <img
-                            src={getImage(
-                              request.image
-                            )}
-                            alt={
-                              request.offered_item
-                            }
-                            style={{
-                              width: "180px",
-                              height: "140px",
-                              objectFit: "cover",
-                              borderRadius:
-                                "14px",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      )}
-
+                    {request.image && (
                       <div
                         style={{
                           marginTop: "12px",
                         }}
                       >
-                        <span className="status">
-                          {statusLabel(
-                            request.status
-                          )}
-                        </span>
+                        <p
+                          style={{
+                            fontWeight: 600,
+                            marginBottom: "8px",
+                          }}
+                        >
+                          Your offered item
+                        </p>
 
-                        {request.status ===
-                          "PENDING" && (
-                          <button
-                            className="btn small"
-                            style={{
-                              marginLeft:
-                                "10px",
-                              background:
-                                "#f3e3df",
-                              color:
-                                "#8b4f45",
-                            }}
-                            onClick={() =>
-                              cancelRequest(
-                                request.id
-                              )
-                            }
-                          >
-                            Cancel
-                          </button>
-                        )}
+                        <img
+                          src={getImage(
+                            request.image
+                          )}
+                          alt={request.offered_item}
+                          style={{
+                            width: "180px",
+                            height: "140px",
+                            objectFit: "cover",
+                            borderRadius: "14px",
+                            display: "block",
+                          }}
+                        />
                       </div>
+                    )}
+
+                    <div
+                      style={{
+                        marginTop: "12px",
+                      }}
+                    >
+                      <span className="status">
+                        {statusLabel(
+                          request.status
+                        )}
+                      </span>
+
+                      {request.status === "PENDING" && (
+                        <button
+                          className="btn small"
+                          style={{
+                            marginLeft: "10px",
+                            background: "#f3e3df",
+                            color: "#8b4f45",
+                          }}
+                          onClick={() =>
+                            cancelRequest(
+                              request.id
+                            )
+                          }
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </div>
-                  )
-                )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -936,8 +1094,7 @@ export default function Exchange() {
             className="modal-card"
             style={{
               maxWidth: "760px",
-              maxHeight:
-                "calc(100vh - 48px)",
+              maxHeight: "calc(100vh - 48px)",
               overflowY: "auto",
               width: "100%",
               boxSizing: "border-box",
@@ -973,155 +1130,144 @@ export default function Exchange() {
                   gap: "14px",
                 }}
               >
-                {ownerRequests.map(
-                  (request) => (
-                    <div
-                      key={request.id}
+                {ownerRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    style={{
+                      background: "white",
+                      padding: "20px",
+                      borderRadius: "17px",
+                    }}
+                  >
+                    <small>
+                      {request.listing?.title ||
+                        `Listing #${request.listing}`}
+                    </small>
+
+                    <h3
                       style={{
-                        background: "white",
-                        padding: "20px",
-                        borderRadius: "17px",
+                        margin: "7px 0",
                       }}
                     >
-                      <small>
-                        {request.listing?.title ||
-                          `Listing #${request.listing}`}
-                      </small>
+                      {request.requester_name ||
+                        "GreenNest member"}
+                    </h3>
 
-                      <h3
-                        style={{
-                          margin: "7px 0",
-                        }}
-                      >
-                        {request.requester_name ||
-                          "GreenNest member"}
-                      </h3>
+                    <p>
+                      <strong>
+                        Offering:
+                      </strong>{" "}
+                      {request.offered_item}
+                    </p>
 
+                    {request.message && (
                       <p>
                         <strong>
-                          Offering:
+                          Message:
                         </strong>{" "}
-                        {request.offered_item}
+                        {request.message}
                       </p>
+                    )}
 
-                      {request.message && (
-                        <p>
-                          <strong>
-                            Message:
-                          </strong>{" "}
-                          {request.message}
-                        </p>
-                      )}
-
-                      {/* OFFERED IMAGE FOR OWNER */}
-                      {request.image && (
-                        <div
-                          style={{
-                            marginTop: "12px",
-                          }}
-                        >
-                          <p
-                            style={{
-                              fontWeight: 600,
-                              marginBottom: "8px",
-                            }}
-                          >
-                            Offered item photo
-                          </p>
-
-                          <img
-                            src={getImage(
-                              request.image
-                            )}
-                            alt={
-                              request.offered_item
-                            }
-                            style={{
-                              width: "180px",
-                              height: "140px",
-                              objectFit: "cover",
-                              borderRadius:
-                                "14px",
-                            }}
-                          />
-                        </div>
-                      )}
-
+                    {request.image && (
                       <div
                         style={{
                           marginTop: "12px",
                         }}
                       >
-                        <span className="status">
-                          {statusLabel(
-                            request.status
-                          )}
-                        </span>
-                      </div>
-
-                      {request.status ===
-                        "PENDING" && (
-                        <div
+                        <p
                           style={{
-                            display: "flex",
-                            gap: "8px",
-                            marginTop: "15px",
-                            flexWrap:
-                              "wrap",
+                            fontWeight: 600,
+                            marginBottom: "8px",
                           }}
                         >
-                          <button
-                            className="btn btn-green small"
-                            onClick={() =>
-                              updateRequest(
-                                request.id,
-                                "ACCEPTED"
-                              )
-                            }
-                          >
-                            Accept
-                          </button>
+                          Offered item photo
+                        </p>
 
-                          <button
-                            className="btn small"
-                            style={{
-                              background:
-                                "#f3e3df",
-                              color:
-                                "#8b4f45",
-                            }}
-                            onClick={() =>
-                              updateRequest(
-                                request.id,
-                                "REJECTED"
-                              )
-                            }
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
+                        <img
+                          src={getImage(
+                            request.image
+                          )}
+                          alt={request.offered_item}
+                          style={{
+                            width: "180px",
+                            height: "140px",
+                            objectFit: "cover",
+                            borderRadius: "14px",
+                          }}
+                        />
+                      </div>
+                    )}
 
-                      {request.status ===
-                        "ACCEPTED" && (
+                    <div
+                      style={{
+                        marginTop: "12px",
+                      }}
+                    >
+                      <span className="status">
+                        {statusLabel(
+                          request.status
+                        )}
+                      </span>
+                    </div>
+
+                    {request.status === "PENDING" && (
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          marginTop: "15px",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <button
                           className="btn btn-green small"
+                          onClick={() =>
+                            updateRequest(
+                              request.id,
+                              "ACCEPTED"
+                            )
+                          }
+                        >
+                          Accept
+                        </button>
+
+                        <button
+                          className="btn small"
                           style={{
-                            marginTop: "15px",
+                            background: "#f3e3df",
+                            color: "#8b4f45",
                           }}
                           onClick={() =>
                             updateRequest(
                               request.id,
-                              "COMPLETED"
+                              "REJECTED"
                             )
                           }
                         >
-                          Mark completed
+                          Reject
                         </button>
-                      )}
-                    </div>
-                  )
-                )}
+                      </div>
+                    )}
+
+                    {request.status === "ACCEPTED" && (
+                      <button
+                        className="btn btn-green small"
+                        style={{
+                          marginTop: "15px",
+                        }}
+                        onClick={() =>
+                          updateRequest(
+                            request.id,
+                            "COMPLETED"
+                          )
+                        }
+                      >
+                        Mark completed
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
