@@ -14,6 +14,17 @@ const CATEGORIES = [
   "Other",
 ];
 
+const CATEGORY_UNITS = {
+  Vegetables: ["kg"],
+  Fruits: ["kg"],
+  Herbs: ["kg"],
+  Seeds: ["kg"],
+  Plants: ["plant"],
+  "Gardening Materials": ["piece"],
+  "Garden Kits": ["kit"],
+  Other: ["kg"],
+};
+
 const INITIAL_FORM = {
   name: "",
   description: "",
@@ -62,13 +73,24 @@ export default function SellerProduct() {
 
         const product = response.data;
 
+        const category =
+          product.category || "Vegetables";
+
+        const allowedUnits =
+          CATEGORY_UNITS[category] || ["kg"];
+
+        const productUnit =
+          allowedUnits.includes(product.unit)
+            ? product.unit
+            : allowedUnits[0];
+
         setForm({
           name: product.name || "",
           description: product.description || "",
-          category: product.category || "Vegetables",
+          category,
           price: product.price || "",
           quantity: product.quantity || "",
-          unit: product.unit || "kg",
+          unit: productUnit,
           location: product.location || "",
           is_available: Boolean(product.is_available),
         });
@@ -100,10 +122,21 @@ export default function SellerProduct() {
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
 
-    setForm((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    if (name === "category") {
+      const newUnits =
+        CATEGORY_UNITS[value] || ["kg"];
+
+      setForm((current) => ({
+        ...current,
+        category: value,
+        unit: newUnits[0],
+      }));
+    } else {
+      setForm((current) => ({
+        ...current,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
 
     setError("");
     setSuccess("");
@@ -252,6 +285,9 @@ export default function SellerProduct() {
   // PAGE
   // ==============================
 
+  const availableUnits =
+    CATEGORY_UNITS[form.category] || ["kg"];
+
   return (
     <div className="form-page">
 
@@ -392,14 +428,22 @@ export default function SellerProduct() {
           <label>
             Unit
 
-            <input
-              type="text"
+            <select
               name="unit"
               value={form.unit}
               onChange={handleChange}
-              placeholder="kg"
               required
-            />
+            >
+              {availableUnits.map((unit) => (
+                <option
+                  key={unit}
+                  value={unit}
+                >
+                  {unit}
+                </option>
+              ))}
+            </select>
+
           </label>
 
         </div>
